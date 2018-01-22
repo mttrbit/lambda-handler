@@ -1,0 +1,12 @@
+src
+tsconfig.json
+tsconfig.test.json
+tslint.json
+.editorconfig
+.travis.yml
+.github
+*.lock
+
+coverage
+.nyc_output
+*.log
