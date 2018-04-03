@@ -1,6 +1,6 @@
 {
   "name": "@mttrbit/lambda-handler",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Tiny wrapper that ensures that AWS Lambda function's callback is always called",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
