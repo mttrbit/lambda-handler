@@ -1,5 +1,5 @@
-import * as _ from 'lodash';
 import { Context } from 'aws-lambda';
+import * as cloneDeep from 'lodash.clonedeep';
 import {
   Headers,
   LambdaLogger,
@@ -8,7 +8,7 @@ import {
 } from '@mttrbit/bunyan-logger';
 
 function child(fields) {
-  const newContext = _.cloneDeep(this);
+  const newContext = cloneDeep(this);
   const log = this.log.child(fields);
 
   return Object.assign(newContext, { log });
@@ -20,7 +20,7 @@ const serializers = {
 };
 
 export function extend(headers: Headers, context: Context) {
-  const newContext = _.cloneDeep(context);
+  const newContext = cloneDeep(context);
   const log = LambdaLogger.create(headers, context);
   return Object.assign(newContext, { log, child });
 }

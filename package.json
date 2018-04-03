@@ -25,6 +25,8 @@
   "license": "ISC",
   "homepage": "https://bitbucket.com/mttrbit/lambda-handler#readme",
   "devDependencies": {
+    "@types/aws-lambda": "^0.0.10",
+    "@types/bunyan": "^1.8.2",
     "@types/chai": "^3.5.2",
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.5",
@@ -36,22 +38,16 @@
     "rimraf": "^2.5.4",
     "source-map-support": "^0.4.15",
     "standard-version": "^4.3.0",
-    "tslint-config-prettier": "^1.6.0",
     "ts-node": "^3.0.0",
     "ts-simple-ast": "^0.38.0",
     "tslint": "^5.0.0",
     "tslint-config-airbnb": "^5.2.1",
+    "tslint-config-prettier": "^1.6.0",
     "typescript": "^2.4.2"
   },
   "dependencies": {
     "@mttrbit/bunyan-logger": "^1.0.6",
-    "@types/aws-lambda": "^0.0.10",
-    "@types/bunyan": "^1.8.2",
-    "bunyan": "^1.8.12",
-    "bunyan-debug-stream": "^1.0.8",
-    "bunyan-prettystream": "^0.1.3",
-    "env-test": "^1.0.0",
-    "lodash": "^4.17.4"
+    "lodash.clonedeep": "^4.5.0"
   },
   "engines": {
     "node": ">=4.0.0"

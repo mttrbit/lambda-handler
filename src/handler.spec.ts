@@ -2,7 +2,6 @@ import * as bunyan from 'bunyan';
 import * as chai from 'chai';
 import { Context, APIGatewayEvent } from 'aws-lambda';
 import 'mocha';
-import * as _ from 'lodash';
 import { extend, serializers } from './extension';
 import { handle } from './handler';
 
@@ -19,7 +18,6 @@ const testHeader = {
 };
 
 describe('lambda-handle-as-promised', () => {
-
   describe('handle', () => {
     it('should throw when handle is not provided', () => {
       expect(handle).to.throw(Error, /^handler is not a function$/);
@@ -37,197 +35,164 @@ describe('lambda-handle-as-promised', () => {
 
     it('wrapped handle should return promise', () => {
       const fixture = handle(() => true);
-      expect(fixture(
-        {},
-        testContext,
-        () => { },
-      )).to.be.an.instanceof(Promise);
+      expect(fixture({}, testContext, () => { })).to.be.an.instanceof(Promise);
     });
 
-    it('wrapped handle should call success callback when plain value is returned', (done) => {
+    it('wrapped handle should call success callback when plain value is returned', done => {
       const testResult = true;
       const fixture = handle(() => testResult);
 
-      fixture(
-        {},
-        testContext,
-        (err, result) => {
-          try {
-            expect(err).to.not.exist;
-            expect(result).to.equal(testResult);
-            done();
-          } catch (assertErr) {
-            done(assertErr);
-          }
-        },
-      );
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.not.exist;
+          expect(result).to.equal(testResult);
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
+      });
     });
 
-    it('wrapped handle should call success callback when resolved promise is returned', (done) => {
+    it('wrapped handle should call success callback when resolved promise is returned', done => {
       const testResult = true;
       const fixture = handle(() => Promise.resolve(testResult));
 
-      fixture(
-        {},
-        testContext,
-        (err, result) => {
-          try {
-            expect(err).to.not.exist;
-            expect(result).to.equal(testResult);
-            done();
-          } catch (assertErr) {
-            done(assertErr);
-          }
-        },
-      );
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.not.exist;
+          expect(result).to.equal(testResult);
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
+      });
     });
 
-    it(
-      'wrapped handle should call success callback when success callback is called by handle',
-      (done) => {
-        const testResult = true;
-        const fixture = handle((event, context, callback) => callback(null, testResult));
+    it('wrapped handle should call success callback when success callback is called by handle', done => {
+      const testResult = true;
+      const fixture = handle((event, context, callback) =>
+        callback(null, testResult),
+      );
 
-        fixture(
-          {},
-          testContext,
-          (err, result) => {
-            try {
-              expect(err).to.not.exist;
-              expect(result).to.equal(testResult);
-              done();
-            } catch (assertErr) {
-              done(assertErr);
-            }
-          });
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.not.exist;
+          expect(result).to.equal(testResult);
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
       });
+    });
 
-    it('wrapped handle should call error callback when rejected promise is returned', (done) => {
+    it('wrapped handle should call error callback when rejected promise is returned', done => {
       const testError = new Error('Winter is coming!');
       const fixture = handle(() => Promise.reject(testError));
 
-      fixture(
-        {},
-        testContext,
-        (err, result) => {
-          try {
-            expect(err).to.deep.equal(testError);
-            expect(result).to.not.exist;
-            done();
-          } catch (assertErr) {
-            done(assertErr);
-          }
-        },
-      );
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.deep.equal(testError);
+          expect(result).to.not.exist;
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
+      });
     });
 
-    it('wrapped handle should call error callback when exception is thrown', (done) => {
+    it('wrapped handle should call error callback when exception is thrown', done => {
       const testError = new Error('Winter is coming!');
       const fixture = handle(() => {
         throw testError;
       });
 
-      fixture(
-        {},
-        testContext,
-        (err, result) => {
-          try {
-            expect(err).to.deep.equal(testError);
-            expect(result).to.not.exist;
-            done();
-          } catch (assertErr) {
-            done(assertErr);
-          }
-        },
-      );
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.deep.equal(testError);
+          expect(result).to.not.exist;
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
+      });
     });
 
-    it(
-      'wrapped handle should call error callback when error callback is called by handle',
-      (done) => {
-        const testError = new Error('Winter is coming!');
-        const fixture = handle((event, context, callback) => callback(testError));
+    it('wrapped handle should call error callback when error callback is called by handle', done => {
+      const testError = new Error('Winter is coming!');
+      const fixture = handle((event, context, callback) => callback(testError));
 
-        fixture(
-          {},
-          testContext,
-          (err, result) => {
-            try {
-              expect(err).to.have.property('message', testError.message);
-              expect(result).to.not.exist;
-              done();
-            } catch (assertErr) {
-              done(assertErr);
-            }
-          },
-        );
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.have.property('message', testError.message);
+          expect(result).to.not.exist;
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
+      });
+    });
+
+    it('wrapped handle should use callback val when both callback is called and val is returned', done => {
+      const testResult1 = true;
+      const testResult2 = false;
+      const fixture = handle((event, context, callback) => {
+        callback(null, testResult1);
+        return testResult2;
       });
 
-    it(
-      'wrapped handle should use callback val when both callback is called and val is returned',
-      (done) => {
-        const testResult1 = true;
-        const testResult2 = false;
-        const fixture = handle((event, context, callback) => {
-          callback(null, testResult1);
-          return testResult2;
-        });
-
-        fixture(
-          {},
-          testContext,
-          (err, result) => {
-            try {
-              expect(err).to.not.exist;
-              expect(result).to.be.equal(testResult1);
-              done();
-            } catch (assertErr) {
-              done(assertErr);
-            }
-          });
+      fixture({}, testContext, (err, result) => {
+        try {
+          expect(err).to.not.exist;
+          expect(result).to.be.equal(testResult1);
+          done();
+        } catch (assertErr) {
+          done(assertErr);
+        }
       });
+    });
   });
 
   describe('options', () => {
     describe('hooks', () => {
       describe('onBefore', () => {
         it('should throw when "onBefore" is not a function', () => {
-          expect(() => handle(() => { }, { onBefore: {} }))
-            .to.throw(Error, /^options.onBefore must be a function when present$/);
+          expect(() => handle(() => { }, { onBefore: {} })).to.throw(
+            Error,
+            /^options.onBefore must be a function when present$/,
+          );
         });
 
-        it('should call "onBefore" hook when passed', (done) => {
+        it('should call "onBefore" hook when passed', done => {
           const testEvent = { data: 'some extremely important data' };
-          const fixture = handle(
-            () => true,
-            {
-              onBefore: (event, context) => {
-                expect(event).to.be.deep.equal(testEvent);
-                expect(context).to.have.property('awsRequestId', testContext.awsRequestId);
-                expect(context).to.have.property('log');
-              },
+          const fixture = handle(() => true, {
+            onBefore: (event, context) => {
+              expect(event).to.be.deep.equal(testEvent);
+              expect(context).to.have.property(
+                'awsRequestId',
+                testContext.awsRequestId,
+              );
+              expect(context).to.have.property('log');
             },
-          );
+          });
 
           fixture(testEvent, testContext, done);
         });
 
-        it('should call "onError" hook when error is thrown in "onBefore"', (done) => {
+        it('should call "onError" hook when error is thrown in "onBefore"', done => {
           let errHookCallCount = 0;
           const testError = new Error('Winter is coming!');
-          const fixture = handle(
-            () => true,
-            {
-              onBefore: () => { throw testError; },
-              onError: (err) => {
-                expect(err).to.be.deep.equal(testError);
-                errHookCallCount += 1;
-                throw err;
-              },
+          const fixture = handle(() => true, {
+            onBefore: () => {
+              throw testError;
             },
-          );
+            onError: err => {
+              expect(err).to.be.deep.equal(testError);
+              errHookCallCount += 1;
+              throw err;
+            },
+          });
 
-          fixture({}, testContext, (err) => {
+          fixture({}, testContext, err => {
             try {
               expect(err).to.be.deep.equal(testError);
               expect(errHookCallCount).to.equal(1);
@@ -235,41 +200,39 @@ describe('lambda-handle-as-promised', () => {
             } catch (assertErr) {
               done(assertErr);
             }
-          },
-          );
+          });
         });
       });
 
       describe('onAfter', () => {
         it('should throw when "onAfter" is not a function', () => {
-          expect(() => handle(() => { }, { onAfter: {} }))
-            .to.throw(Error, /^options.onAfter must be a function when present$/);
+          expect(() => handle(() => { }, { onAfter: {} })).to.throw(
+            Error,
+            /^options.onAfter must be a function when present$/,
+          );
         });
 
-        it('should call "onAfter" hook when passed', (done) => {
+        it('should call "onAfter" hook when passed', done => {
           const testEvent = { data: 'some extremely important data' };
           const testResult = { response: 'some useful info' };
-          const fixture = handle(
-            () => testResult,
-            {
-              onAfter: (result, event, context) => {
-                expect(result).to.be.deep.equal(testResult);
-                expect(event).to.be.deep.equal(testEvent);
-                expect(context).to.have.property('awsRequestId', testContext.awsRequestId);
-                expect(context).to.have.property('log');
-              },
+          const fixture = handle(() => testResult, {
+            onAfter: (result, event, context) => {
+              expect(result).to.be.deep.equal(testResult);
+              expect(event).to.be.deep.equal(testEvent);
+              expect(context).to.have.property(
+                'awsRequestId',
+                testContext.awsRequestId,
+              );
+              expect(context).to.have.property('log');
             },
-          );
+          });
 
           fixture(testEvent, testContext, done);
         });
 
-        it('should use value returned by "onAfter" as a result', (done) => {
+        it('should use value returned by "onAfter" as a result', done => {
           const modifiedResult = { modifiedResponse: 'some modified info' };
-          const fixture = handle(
-            () => true,
-            { onAfter: () => modifiedResult },
-          );
+          const fixture = handle(() => true, { onAfter: () => modifiedResult });
 
           fixture({}, testContext, (err, result) => {
             try {
@@ -278,16 +241,12 @@ describe('lambda-handle-as-promised', () => {
             } catch (assertErr) {
               done(assertErr);
             }
-          },
-          );
+          });
         });
 
-        it('should use value returned by "onAfter" as a result when value is falsy', (done) => {
+        it('should use value returned by "onAfter" as a result when value is falsy', done => {
           const modifiedResult = false;
-          const fixture = handle(
-            () => true,
-            { onAfter: () => modifiedResult },
-          );
+          const fixture = handle(() => true, { onAfter: () => modifiedResult });
 
           fixture({}, testContext, (err, result) => {
             try {
@@ -296,16 +255,12 @@ describe('lambda-handle-as-promised', () => {
             } catch (assertErr) {
               done(assertErr);
             }
-          },
-          );
+          });
         });
 
-        it('should use original result when "onAfter" does not return any value', (done) => {
+        it('should use original result when "onAfter" does not return any value', done => {
           const testResult = { response: 'some useful info' };
-          const fixture = handle(
-            () => testResult,
-            { onAfter: () => { } },
-          );
+          const fixture = handle(() => testResult, { onAfter: () => { } });
 
           fixture({}, testContext, (err, result) => {
             try {
@@ -317,22 +272,21 @@ describe('lambda-handle-as-promised', () => {
           });
         });
 
-        it('should call "onError" hook when error is thrown in "onAfter"', (done) => {
+        it('should call "onError" hook when error is thrown in "onAfter"', done => {
           let errHookCallCount = 0;
           const testError = new Error('Winter is coming!');
-          const fixture = handle(
-            () => true,
-            {
-              onAfter: () => { throw testError; },
-              onError: (err) => {
-                expect(err).to.be.deep.equal(testError);
-                errHookCallCount += 1;
-                throw err;
-              },
+          const fixture = handle(() => true, {
+            onAfter: () => {
+              throw testError;
             },
-          );
+            onError: err => {
+              expect(err).to.be.deep.equal(testError);
+              errHookCallCount += 1;
+              throw err;
+            },
+          });
 
-          fixture({}, testContext, (err) => {
+          fixture({}, testContext, err => {
             try {
               expect(err).to.be.deep.equal(testError);
               expect(errHookCallCount).to.equal(1);
@@ -346,20 +300,27 @@ describe('lambda-handle-as-promised', () => {
 
       describe('onError', () => {
         it('should throw when "onError" is not a function', () => {
-          expect(() => handle(() => { }, { onError: {} }))
-            .to.throw(Error, /^options.onError must be a function when present$/);
+          expect(() => handle(() => { }, { onError: {} })).to.throw(
+            Error,
+            /^options.onError must be a function when present$/,
+          );
         });
 
-        it('should call "onError" hook when passed', (done) => {
+        it('should call "onError" hook when passed', done => {
           const testEvent = { data: 'some extremely important data' };
           const testError = new Error('Winter is coming!');
           const fixture = handle(
-            () => { throw testError; },
+            () => {
+              throw testError;
+            },
             {
               onError: (err, event, context) => {
                 expect(err).to.be.deep.equal(err);
                 expect(event).to.be.deep.equal(testEvent);
-                expect(context).to.have.property('awsRequestId', testContext.awsRequestId);
+                expect(context).to.have.property(
+                  'awsRequestId',
+                  testContext.awsRequestId,
+                );
                 expect(context).to.have.property('log');
               },
             },
@@ -368,14 +329,20 @@ describe('lambda-handle-as-promised', () => {
           fixture(testEvent, testContext, done);
         });
 
-        it('should use error thrown by "onError" as an error', (done) => {
+        it('should use error thrown by "onError" as an error', done => {
           const testError = new Error('Winter is coming!');
           const fixture = handle(
-            () => { throw new Error(); },
-            { onError: () => { throw testError; } },
+            () => {
+              throw new Error();
+            },
+            {
+              onError: () => {
+                throw testError;
+              },
+            },
           );
 
-          fixture({}, testContext, (err) => {
+          fixture({}, testContext, err => {
             try {
               expect(err).to.deep.equal(testError);
               done();
@@ -385,10 +352,12 @@ describe('lambda-handle-as-promised', () => {
           });
         });
 
-        it('should use value returned by "onError" as a result', (done) => {
+        it('should use value returned by "onError" as a result', done => {
           const testResult = { testResponse: 'some useful info' };
           const fixture = handle(
-            () => { throw new Error(); },
+            () => {
+              throw new Error();
+            },
             { onError: () => testResult },
           );
 
@@ -403,10 +372,12 @@ describe('lambda-handle-as-promised', () => {
           });
         });
 
-        it('should use value returned by "onError" as a result when value is falsy', (done) => {
+        it('should use value returned by "onError" as a result when value is falsy', done => {
           const testResult = false;
           const fixture = handle(
-            () => { throw new Error(); },
+            () => {
+              throw new Error();
+            },
             { onError: () => testResult },
           );
 
@@ -418,38 +389,39 @@ describe('lambda-handle-as-promised', () => {
             } catch (assertErr) {
               done(assertErr);
             }
-          },
-          );
+          });
         });
 
-        it(
-          'should return orig. error when "onError" does not return any value and does not throw',
-          (done) => {
-            const testError = new Error('Winter is coming!');
-            const fixture = handle(
-              () => { throw testError; },
-              { onError: () => { } },
-            );
+        it('should return orig. error when "onError" does not return any value and does not throw', done => {
+          const testError = new Error('Winter is coming!');
+          const fixture = handle(
+            () => {
+              throw testError;
+            },
+            { onError: () => { } },
+          );
 
-            fixture({}, testContext, (err, result) => {
-              try {
-                expect(err).to.be.equal(null);
-                expect(result).to.deep.equal(testError);
-                done();
-              } catch (assertErr) {
-                done(assertErr);
-              }
-            });
+          fixture({}, testContext, (err, result) => {
+            try {
+              expect(err).to.be.equal(null);
+              expect(result).to.deep.equal(testError);
+              done();
+            } catch (assertErr) {
+              done(assertErr);
+            }
           });
+        });
 
-        it('should call "onAfter" hook when result is returned in "onError"', (done) => {
+        it('should call "onAfter" hook when result is returned in "onError"', done => {
           let resultHookCallCount = 0;
           const testResult = { testResponse: 'some useful info' };
           const fixture = handle(
-            () => { throw new Error(); },
+            () => {
+              throw new Error();
+            },
             {
               onError: () => testResult,
-              onAfter: (result) => {
+              onAfter: result => {
                 expect(result).to.be.deep.equal(testResult);
                 resultHookCallCount += 1;
               },
@@ -472,17 +444,19 @@ describe('lambda-handle-as-promised', () => {
 
     describe('errorStack', () => {
       it('should throw when "errorStack" is not boolean', () => {
-        expect(() => handle(() => { }, { errorStack: 'yes' }))
-          .to.throw(Error, /^options.errorStack must be a boolean when present$/);
+        expect(() => handle(() => { }, { errorStack: 'yes' })).to.throw(
+          Error,
+          /^options.errorStack must be a boolean when present$/,
+        );
       });
 
-      it('should return error stack by default', (done) => {
+      it('should return error stack by default', done => {
         const testError = new Error('Winter is coming!');
         const fixture = handle(() => {
           throw testError;
         });
 
-        fixture({}, testContext, (err) => {
+        fixture({}, testContext, err => {
           try {
             expect(err).to.have.property('message', testError.message);
             expect(err).to.have.property('stack', testError.stack);
@@ -493,7 +467,7 @@ describe('lambda-handle-as-promised', () => {
         });
       });
 
-      it('should return error stack when "errorStack" is set to true', (done) => {
+      it('should return error stack when "errorStack" is set to true', done => {
         const testError = new Error('Winter is coming!');
         const fixture = handle(
           () => {
@@ -501,9 +475,10 @@ describe('lambda-handle-as-promised', () => {
           },
           {
             errorStack: true,
-          });
+          },
+        );
 
-        fixture({}, testContext, (err) => {
+        fixture({}, testContext, err => {
           try {
             expect(err).to.have.property('message', testError.message);
             expect(err).to.have.property('stack', testError.stack);
@@ -514,7 +489,7 @@ describe('lambda-handle-as-promised', () => {
         });
       });
 
-      it('should sanitize error stack when "errorStack" is set to false', (done) => {
+      it('should sanitize error stack when "errorStack" is set to false', done => {
         const testError = new Error('Winter is coming!');
         const fixture = handle(
           () => {
@@ -522,9 +497,10 @@ describe('lambda-handle-as-promised', () => {
           },
           {
             errorStack: false,
-          });
+          },
+        );
 
-        fixture({}, testContext, (err) => {
+        fixture({}, testContext, err => {
           try {
             expect(err).to.have.property('message', testError.message);
             expect(err).to.have.property('stack', '');
@@ -532,37 +508,35 @@ describe('lambda-handle-as-promised', () => {
           } catch (assertErr) {
             done(assertErr);
           }
-        },
-        );
+        });
       });
 
-      it(
-        'should handle case when "errorStack" is set to false, but "stack" field missing in error',
-        (done) => {
-          const testError = { message: 'Winter is coming!' };
-          const fixture = handle(
-            () => {
-              throw testError;
-            },
-            {
-              errorStack: false,
-            });
+      it('should handle case when "errorStack" is set to false, but "stack" field missing in error', done => {
+        const testError = { message: 'Winter is coming!' };
+        const fixture = handle(
+          () => {
+            throw testError;
+          },
+          {
+            errorStack: false,
+          },
+        );
 
-          fixture({}, testContext, (err) => {
-            try {
-              expect(err).to.have.property('message', testError.message);
-              expect(err).not.to.have.property('stack');
-              done();
-            } catch (assertErr) {
-              done(assertErr);
-            }
-          });
+        fixture({}, testContext, err => {
+          try {
+            expect(err).to.have.property('message', testError.message);
+            expect(err).not.to.have.property('stack');
+            done();
+          } catch (assertErr) {
+            done(assertErr);
+          }
         });
+      });
     });
   });
 
   describe('context', () => {
-    it('should have log property defined', (done) => {
+    it('should have log property defined', done => {
       const fixture = handle((event, context) => {
         expect(context).to.have.property('log');
         expect(context.log).to.be.an.instanceof(bunyan);
@@ -571,7 +545,7 @@ describe('lambda-handle-as-promised', () => {
       fixture({}, testContext, done);
     });
 
-    it('should have child property defined', (done) => {
+    it('should have child property defined', done => {
       const fixture = handle((event, context) => {
         expect(context).to.have.property('child');
         expect(context.child).to.be.a('function');

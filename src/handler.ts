@@ -53,9 +53,11 @@ export function handle(handler, options: Options = {}) {
           const result = utils.sanitizeError(err, options);
           const onError = result =>
             utils.callErrorHook(options.onError, result, event, newContext);
-          return Promise.resolve(onError(result)).then(result =>
-            callback(null, result),
-          );
+          const onAfter = result =>
+            utils.callHook(options.onAfter, result, event, newContext);
+          return Promise.resolve(onError(result))
+            .then(result => onAfter(result))
+            .then(result => callback(null, result));
         }),
     ).catch(err => callback(utils.sanitizeError(err, options)));
   };
