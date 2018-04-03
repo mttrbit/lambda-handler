@@ -46,7 +46,7 @@
     "typescript": "^2.4.2"
   },
   "dependencies": {
-    "@mttrbit/bunyan-logger": "^1.0.6",
+    "@mttrbit/bunyan-logger": "^1.0.9",
     "lodash.clonedeep": "^4.5.0"
   },
   "engines": {
